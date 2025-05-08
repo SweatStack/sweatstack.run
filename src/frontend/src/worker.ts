@@ -13,7 +13,7 @@ interface PrepareError {
 }
 
 self.onmessage = async ({ data }: { data: RunCode }) => {
-  const { files } = data
+  const { files, sweatstack_api_key } = data
   let msg = ''
   try {
     const [setupTime, { pyodide, preparePyEnv }] = await time(getPyodideEnv())
@@ -23,7 +23,7 @@ self.onmessage = async ({ data }: { data: RunCode }) => {
     post({ kind: 'status', message: `${msg}Installing dependencies…` })
     const sys = pyodide.pyimport('sys')
 
-    const [installTime, prepareStatus] = await time(preparePyEnv.prepare_env(pyodide.toPy(files)))
+    const [installTime, prepareStatus] = await time(preparePyEnv.prepare_env(pyodide.toPy(files), pyodide.toPy(sweatstack_api_key)))
     sys.stdout.flush()
     sys.stderr.flush()
     if (prepareStatus.kind == 'error') {
@@ -46,6 +46,7 @@ self.onmessage = async ({ data }: { data: RunCode }) => {
         filename: activeFile.name,
       }),
     )
+
     sys.stdout.flush()
     sys.stderr.flush()
     postPrint()
@@ -88,7 +89,7 @@ async function time<T>(promise: Promise<T>): Promise<[number, T]> {
 interface PyodideEnv {
   pyodide: PyodideInterface
   // matches the signature of the `prepare_env` function in prepare_env.py
-  preparePyEnv: { prepare_env: (files: any) => Promise<PrepareSuccess | PrepareError> }
+  preparePyEnv: { prepare_env: (files: any, sweatstack_api_key: any) => Promise<PrepareSuccess | PrepareError> }
 }
 
 // see https://github.com/pyodide/micropip/issues/201

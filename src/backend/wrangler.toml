@@ -1,8 +1,8 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "pydantic-run"
+name = "sweatstack-run"
 compatibility_date = "2025-01-09"
 main = "src/index.ts"
-routes = ["pydantic.run/*"]
+routes = ["sweatstack.run/*"]
 workers_dev = false
 
 [build]
@@ -10,7 +10,7 @@ command = "cd ../frontend && npm run build"
 watch_dir = ["../frontend/src", "src"]
 
 [[r2_buckets]]
-bucket_name = "pydantic-run"
+bucket_name = "sweatstack-run"
 binding = "BUCKET"
 
 [assets]
@@ -22,5 +22,5 @@ workers_dev = true
 routes = []
 
 [[env.previews.r2_buckets]]
-bucket_name = "pydantic-run-dev"
+bucket_name = "sweatstack-run-dev"
 binding = "BUCKET"

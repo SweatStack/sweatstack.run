@@ -4,6 +4,7 @@ import Convert from 'ansi-to-html'
 import Editor from './editor'
 import Worker from './worker?worker'
 import type { WorkerResponse, RunCode, CodeFile, Versions } from './types'
+import { initiateOAuth2Flow, handleOAuth2Callback, isOAuthCallback } from './oauth'
 
 const decoder = new TextDecoder()
 const ansiConverter = new Convert({ colors: { 1: '#CE9178', 4: '#569CFF', 5: '#F00' } })
@@ -14,11 +15,25 @@ export default function () {
   const [installed, setInstalled] = createSignal('')
   const [outputHtml, setOutputHtml] = createSignal('')
   const [versions, setVersions] = createSignal<Versions | null>(null)
+  const [accessToken, setAccessToken] = createSignal<string | null>(null)
   let terminalOutput = ''
   let worker: Worker
   let outputRef!: HTMLPreElement
 
   onMount(async () => {
+    // Handle OAuth callback if we're returning from authorization
+    if (isOAuthCallback()) {
+      const token = await handleOAuth2Callback()
+      if (token) {
+        setAccessToken(token)
+      } else {
+        setStatus('Failed to obtain access token')
+      }
+    } else if (!accessToken()) {
+      // If we don't have a token and we're not in the callback, start the OAuth flow
+      initiateOAuth2Flow()
+    }
+
     worker = new Worker()
     worker.onmessage = ({ data }: { data: WorkerResponse }) => {
       let newTerminalOutput = false
@@ -56,25 +71,33 @@ export default function () {
   })
 
   async function runCode(files: CodeFile[]) {
+    if (!accessToken()) {
+      setStatus('Please authenticate first')
+      return
+    }
+
     setRunning(true)
     setStatus('Starting Python...')
     setInstalled('')
     setOutputHtml('')
     terminalOutput = ''
-    worker!.postMessage({ files } as RunCode)
+    worker!.postMessage({ 
+      files,
+      sweatstack_api_key: accessToken()
+    } as RunCode)
   }
 
   // noinspection JSUnusedAssignment
   return (
     <main>
       <header>
-        <h1>pydantic.run</h1>
+        <h1>sweatstack.run</h1>
         <aside>
-          Python browser sandbox, see{' '}
-          <a href="https://github.com/pydantic/pydantic.run" target="_blank">
-            github.com/pydantic/pydantic.run
-          </a>{' '}
-          for more info. <a href="/blank">reset sandbox</a>.
+          Python browser sandbox, inspired by and based on{' '}
+          <a href="https://pydantic.run" target="_blank">
+            pydantic.run
+          </a>
+          . <a href="/blank">reset sandbox</a>.
         </aside>
       </header>
       <section>

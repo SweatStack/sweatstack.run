@@ -163,7 +163,7 @@ export default function (props: EditorProps) {
           </div>
           <div class="flex">
             {showSave() && (
-              <div class="toggle" title="Save changes to on pydantic.run's infra">
+              <div class="toggle" title="Save changes to on sweatstack.run's infra">
                 <span class="middle">Save</span>
                 <label class="switch">
                   <input

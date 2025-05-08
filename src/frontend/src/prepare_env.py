@@ -47,7 +47,7 @@ class Error:
     kind: Literal['error'] = 'error'
 
 
-async def prepare_env(files: list[File]) -> Success | Error:
+async def prepare_env(files: list[File], sweatstack_api_key: str | None = None) -> Success | Error:
     # This is a temporary hack to install jiter from a URL until
     # https://github.com/pyodide/pyodide/pull/5388 is released.
     real_find_wheel = transaction.find_wheel
@@ -130,6 +130,12 @@ async def prepare_env(files: list[File]) -> Success | Error:
 
         AsyncClient.send = send_monkeypatch_print
     # end temporary hack for httpx debug prints
+
+
+    if sweatstack_api_key:
+        os.environ['SWEATSTACK_API_KEY'] = sweatstack_api_key
+    else:
+        os.environ['SWEATSTACK_API_KEY'] = 'foo bar'
 
     return Success(message=', '.join(dependencies or []))
 

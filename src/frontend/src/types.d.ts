@@ -7,6 +7,7 @@ export interface CodeFile {
 
 export interface RunCode {
   files: CodeFile[]
+  sweatstack_api_key?: string
 }
 
 export interface Print {
